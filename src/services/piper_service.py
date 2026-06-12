@@ -20,7 +20,7 @@ class PiperService:
             model = os.path.join(
                 base_dir,
                 "models",
-                "en_US-lessac-medium.onnx"
+                "en_IN-medium.onnx"
             )
         self.model = model
 

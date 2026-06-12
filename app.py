@@ -38,10 +38,36 @@ style = st.selectbox(
     ]
 )
 
+format_options = {
+    "YouTube Shorts / Instagram Reels (9:16)": {
+        "width": 1080,
+        "height": 1920,
+        "orientation": "portrait"
+    },
+    "YouTube Long-form (16:9)": {
+        "width": 1920,
+        "height": 1080,
+        "orientation": "landscape"
+    },
+    "Square Post (1:1)": {
+        "width": 1080,
+        "height": 1080,
+        "orientation": "square"
+    }
+}
+
+video_format = st.selectbox(
+    "Video Format",
+    list(format_options.keys())
+)
+
+selected_resolution = format_options[video_format]
+
 if st.button("Generate Script"):
 
     with st.spinner(
-        "Generating script and audio..."
+        "Generating video... "
+        "This may take a few minutes."
     ):
 
         graph = build_graph()
@@ -53,7 +79,12 @@ if st.button("Generate Script"):
                 "duration": duration,
                 "style": style,
                 "script": "",
-                "audio_path": ""
+                "audio_path": "",
+                "media_files": [],
+                "final_video": "",
+                "video_width": selected_resolution["width"],
+                "video_height": selected_resolution["height"],
+                "orientation": selected_resolution["orientation"]
             }
         )
 
@@ -61,7 +92,7 @@ if st.button("Generate Script"):
         audio_path = result["audio_path"]
 
         st.success(
-            "Script and Audio Generated"
+            "Video Generated Successfully!"
         )
 
         st.text_area(
@@ -89,9 +120,20 @@ if st.button("Generate Script"):
                 file_name="narration.wav"
             )
 
+        st.subheader("🎬 Final Video")
+        final_video = result["final_video"]
+        st.video(final_video)
+
+        with open(
+            final_video, "rb"
+        ) as video_file:
+            st.download_button(
+                "Download Video",
+                video_file,
+                file_name="final_video.mp4"
+            )
+
         media_files = result["media_files"]
-        st.success(
-            f"{len(media_files)} clips downloaded"
+        st.info(
+            f"{len(media_files)} clips used"
         )
-        for clip in media_files:
-            st.video(clip)
