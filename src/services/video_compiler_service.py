@@ -1,7 +1,10 @@
 import os
+import re
 from moviepy import (
     VideoFileClip,
     AudioFileClip,
+    TextClip,
+    CompositeVideoClip,
     concatenate_videoclips,
     vfx
 )
@@ -21,6 +24,7 @@ class VideoCompilerService:
         self,
         media_files: list,
         audio_path: str,
+        script: str = "",
         output_path: str = None,
         width: int = 1920,
         height: int = 1080
@@ -95,10 +99,28 @@ class VideoCompilerService:
             trimmed_clips.append(clip)
             elapsed += clip.duration
 
-        final_video = concatenate_videoclips(
+        base_video = concatenate_videoclips(
             trimmed_clips,
             method="compose"
         )
+
+        if script:
+            subtitle_clips = (
+                self._create_subtitles(
+                    script,
+                    audio_duration,
+                    width,
+                    height
+                )
+            )
+            all_clips = [base_video] + subtitle_clips
+            final_video = CompositeVideoClip(
+                all_clips,
+                size=(width, height)
+            )
+        else:
+            final_video = base_video
+
         final_video = final_video.with_audio(
             audio_clip
         )
@@ -117,6 +139,89 @@ class VideoCompilerService:
         final_video.close()
 
         return output_path
+
+    def _split_into_subtitles(
+        self, script, num_words=6
+    ):
+        clean = re.sub(
+            r'\s+', ' ', script.strip()
+        )
+        sentences = re.split(
+            r'(?<=[.!?])\s+', clean
+        )
+
+        phrases = []
+        for sentence in sentences:
+            words = sentence.split()
+            for i in range(
+                0, len(words), num_words
+            ):
+                chunk = ' '.join(
+                    words[i:i + num_words]
+                )
+                if chunk.strip():
+                    phrases.append(chunk)
+
+        return phrases
+
+    def _create_subtitles(
+        self, script, duration, width, height
+    ):
+        phrases = self._split_into_subtitles(
+            script, num_words=5
+        )
+
+        if not phrases:
+            return []
+
+        total_words = sum(
+            len(p.split()) for p in phrases
+        )
+        if total_words == 0:
+            return []
+
+        word_duration = duration / total_words
+
+        font_size = max(
+            28, min(48, width // 30)
+        )
+        max_text_width = int(width * 0.85)
+
+        subtitle_clips = []
+        current_time = 0
+
+        for phrase in phrases:
+            num_words = len(phrase.split())
+            clip_duration = (
+                num_words * word_duration
+            )
+
+            txt_clip = TextClip(
+                text=phrase,
+                font_size=font_size,
+                color="white",
+                stroke_color="black",
+                stroke_width=2,
+                size=(max_text_width, None),
+                method="caption",
+                text_align="center"
+            )
+
+            txt_clip = txt_clip.with_start(
+                current_time
+            )
+            txt_clip = txt_clip.with_duration(
+                clip_duration
+            )
+
+            txt_clip = txt_clip.with_position(
+                ("center", height - 120)
+            )
+
+            subtitle_clips.append(txt_clip)
+            current_time += clip_duration
+
+        return subtitle_clips
 
     def _resize_clip(
         self, clip, target_w, target_h

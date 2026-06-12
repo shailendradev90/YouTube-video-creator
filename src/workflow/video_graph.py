@@ -59,6 +59,7 @@ def video_compile_node(state):
     final_path = compile_video(
         media_files=state["media_files"],
         audio_path=state["audio_path"],
+        script=state.get("script", ""),
         width=state.get("video_width", 1920),
         height=state.get("video_height", 1080)
     )

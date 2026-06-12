@@ -9,6 +9,7 @@ compiler = VideoCompilerService()
 def compile_video(
     media_files: list,
     audio_path: str,
+    script: str = "",
     width: int = 1920,
     height: int = 1080
 ) -> str:
@@ -16,6 +17,7 @@ def compile_video(
     final_path = compiler.compile(
         media_files=media_files,
         audio_path=audio_path,
+        script=script,
         width=width,
         height=height
     )
