@@ -5,6 +5,7 @@ from langgraph.graph import END
 
 
 from src.agents.script_agent import generate_script
+from src.agents.voice_agent import generate_voice
 
 
 class VideoState(TypedDict):
@@ -13,6 +14,7 @@ class VideoState(TypedDict):
     language: str
     style: str
     script: str
+    audio_path: str
 
 
 def script_node(state):
@@ -29,6 +31,17 @@ def script_node(state):
     return state
 
 
+def voice_node(state):
+
+    audio_path = generate_voice(
+        state["script"]
+    )
+
+    state["audio_path"] = audio_path
+
+    return state
+
+
 def build_graph():
 
     graph = StateGraph(VideoState)
@@ -38,12 +51,22 @@ def build_graph():
         script_node
     )
 
+    graph.add_node(
+        "voice_generation",
+        voice_node
+    )
+
     graph.set_entry_point(
         "script_generation"
     )
 
     graph.add_edge(
         "script_generation",
+        "voice_generation"
+    )
+
+    graph.add_edge(
+        "voice_generation",
         END
     )
 

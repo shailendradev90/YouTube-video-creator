@@ -41,7 +41,7 @@ style = st.selectbox(
 if st.button("Generate Script"):
 
     with st.spinner(
-        "Generating script..."
+        "Generating script and audio..."
     ):
 
         graph = build_graph()
@@ -52,14 +52,16 @@ if st.button("Generate Script"):
                 "language": language,
                 "duration": duration,
                 "style": style,
-                "script": ""
+                "script": "",
+                "audio_path": ""
             }
         )
 
         script = result["script"]
+        audio_path = result["audio_path"]
 
         st.success(
-            "Script Generated"
+            "Script and Audio Generated"
         )
 
         st.text_area(
@@ -73,3 +75,16 @@ if st.button("Generate Script"):
             script,
             file_name="youtube_script.txt"
         )
+
+        st.audio(audio_path)
+
+        with open(
+            audio_path,
+            "rb"
+        ) as file:
+
+            st.download_button(
+                "Download Audio",
+                file,
+                file_name="narration.wav"
+            )
