@@ -13,3 +13,7 @@ langchain-ollama
 pydantic
 
 python-dotenv
+ 
+requests
+
+moviepy
