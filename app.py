@@ -88,3 +88,10 @@ if st.button("Generate Script"):
                 file,
                 file_name="narration.wav"
             )
+
+        media_files = result["media_files"]
+        st.success(
+            f"{len(media_files)} clips downloaded"
+        )
+        for clip in media_files:
+            st.video(clip)
